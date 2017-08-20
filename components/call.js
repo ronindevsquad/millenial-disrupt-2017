@@ -12,7 +12,6 @@ import {
 
 import io from 'socket.io-client';
 
-
 import {
   RTCPeerConnection,
   RTCMediaStream,
@@ -23,7 +22,7 @@ import {
   getUserMedia,
 } from 'react-native-webrtc';
 
-const configuration = {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]};
+const configuration = { "iceServers": [{ "url": "stun:stun.l.google.com:19302" }] };
 
 const pcPeers = {};
 let localStream;
@@ -40,7 +39,7 @@ function getLocalStream(isFront, callback) {
 
       for (const i = 0; i < sourceInfos.length; i++) {
         const sourceInfo = sourceInfos[i];
-        if(sourceInfo.kind == "video" && sourceInfo.facing == (isFront ? "front" : "back")) {
+        if (sourceInfo.kind == "video" && sourceInfo.facing == (isFront ? "front" : "back")) {
           videoSourceId = sourceInfo.id;
         }
       }
@@ -55,7 +54,7 @@ function getLocalStream(isFront, callback) {
         minFrameRate: 30,
       },
       facingMode: (isFront ? "user" : "environment"),
-      optional: (videoSourceId ? [{sourceId: videoSourceId}] : []),
+      optional: (videoSourceId ? [{ sourceId: videoSourceId }] : []),
     }
   }, function (stream) {
     console.log('getUserMedia success', stream);
@@ -66,7 +65,7 @@ function getLocalStream(isFront, callback) {
 function join(roomID) {
   console.log("*********************************");
   //console.log(container.socket);
-  container.socket.emit('join', roomID, function(socketIds){
+  container.socket.emit('join', roomID, function (socketIds) {
     console.log('join', socketIds);
     for (const i in socketIds) {
       const socketId = socketIds[i];
@@ -82,16 +81,16 @@ function createPC(socketId, isOffer) {
   pc.onicecandidate = function (event) {
     console.log('onicecandidate', event.candidate);
     if (event.candidate) {
-      container.socket.emit('exchange', {'to': socketId, 'candidate': event.candidate });
+      container.socket.emit('exchange', { 'to': socketId, 'candidate': event.candidate });
     }
   };
 
   function createOffer() {
-    pc.createOffer(function(desc) {
+    pc.createOffer(function (desc) {
       console.log('createOffer', desc);
       pc.setLocalDescription(desc, function () {
         console.log('setLocalDescription', pc.localDescription);
-        container.socket.emit('exchange', {'to': socketId, 'sdp': pc.localDescription });
+        container.socket.emit('exchange', { 'to': socketId, 'sdp': pc.localDescription });
       }, logError);
     }, logError);
   }
@@ -103,7 +102,7 @@ function createPC(socketId, isOffer) {
     }
   }
 
-  pc.oniceconnectionstatechange = function(event) {
+  pc.oniceconnectionstatechange = function (event) {
     console.log('oniceconnectionstatechange', event.target.iceConnectionState);
     if (event.target.iceConnectionState === 'completed') {
       setTimeout(() => {
@@ -114,14 +113,14 @@ function createPC(socketId, isOffer) {
       createDataChannel();
     }
   };
-  pc.onsignalingstatechange = function(event) {
+  pc.onsignalingstatechange = function (event) {
     console.log('onsignalingstatechange', event.target.signalingState);
   };
 
   pc.onaddstream = function (event) {
     console.log('onaddstream', event.stream);
     console.log(container, "onaddstream");
-    container.setState({info: 'One peer join!'});
+    container.setState({ info: 'One peer join!' });
 
     const remoteList = container.state.remoteList;
     remoteList[socketId] = event.stream.toURL();
@@ -145,13 +144,13 @@ function createPC(socketId, isOffer) {
 
     dataChannel.onmessage = function (event) {
       console.log("dataChannel.onmessage:", event.data);
-      container.receiveTextData({user: socketId, message: event.data});
+      container.receiveTextData({ user: socketId, message: event.data });
     };
 
     dataChannel.onopen = function () {
       console.log('dataChannel.onopen');
       console.log(container, "onopen")
-      container.setState({textRoomConnected: true});
+      container.setState({ textRoomConnected: true });
     };
 
     dataChannel.onclose = function () {
@@ -176,11 +175,11 @@ function exchange(data) {
     console.log('exchange sdp', data);
     pc.setRemoteDescription(new RTCSessionDescription(data.sdp), function () {
       if (pc.remoteDescription.type == "offer")
-        pc.createAnswer(function(desc) {
+        pc.createAnswer(function (desc) {
           console.log('createAnswer', desc);
           pc.setLocalDescription(desc, function () {
             console.log('setLocalDescription', pc.localDescription);
-            container.socket.emit('exchange', {'to': fromId, 'sdp': pc.localDescription });
+            container.socket.emit('exchange', { 'to': fromId, 'sdp': pc.localDescription });
           }, logError);
         }, logError);
     }, logError);
@@ -200,7 +199,7 @@ function leave(socketId) {
   const remoteList = container.state.remoteList;
   delete remoteList[socketId]
   container.setState({ remoteList: remoteList });
-  container.setState({info: 'One peer leave!'});
+  container.setState({ info: 'One peer leave!' });
 }
 
 function logError(error) {
@@ -221,7 +220,7 @@ function getStats() {
   if (pc.getRemoteStreams()[0] && pc.getRemoteStreams()[0].getAudioTracks()[0]) {
     const track = pc.getRemoteStreams()[0].getAudioTracks()[0];
     console.log('track', track);
-    pc.getStats(track, function(report) {
+    pc.getStats(track, function (report) {
       console.log('getStats report', report);
     }, logError);
   }
@@ -229,9 +228,9 @@ function getStats() {
 
 let container;
 
-const Component2 = React.createClass({
-  getInitialState(){
-    this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => true});
+const Call = React.createClass({
+  getInitialState() {
+    this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => true });
     return {
       info: 'Initializing',
       status: 'init',
@@ -246,34 +245,34 @@ const Component2 = React.createClass({
   componentDidMount() {
     console.log("*****************************");
     container = this;
-    this.socket = io.connect('https://react-native-webrtc.herokuapp.com', {transports: ['websocket']});
-    this.socket.on('exchange', function(data){
+    this.socket = io.connect('https://react-native-webrtc.herokuapp.com', { transports: ['websocket'] });
+    this.socket.on('exchange', function (data) {
       exchange(data);
     });
-    this.socket.on('leave', function(socketId){
+    this.socket.on('leave', function (socketId) {
       leave(socketId);
     });
 
-    this.socket.on('connect', function(data) {
+    this.socket.on('connect', function (data) {
       console.log('connect');
-      getLocalStream(true, function(stream) {
+      getLocalStream(true, function (stream) {
         localStream = stream;
-        container.setState({selfViewSrc: stream.toURL()});
-        container.setState({status: 'ready', info: 'Please enter or create room ID'});
+        container.setState({ selfViewSrc: stream.toURL() });
+        container.setState({ status: 'ready', info: 'Please enter or create room ID' });
       });
     });
 
   },
   _press(event) {
-    this.setState({status: 'connect', info: 'Connecting'});
+    this.setState({ status: 'connect', info: 'Connecting' });
     // console.log(this.state);
     // console.log(this.socket);
     join("RoninDevSquad", this.socket);
   },
   _switchVideoType() {
     const isFront = !this.state.isFront;
-    this.setState({isFront});
-    getLocalStream(isFront, function(stream) {
+    this.setState({ isFront });
+    getLocalStream(isFront, function (stream) {
       if (localStream) {
         for (const id in pcPeers) {
           const pc = pcPeers[id];
@@ -282,7 +281,7 @@ const Component2 = React.createClass({
         localStream.release();
       }
       localStream = stream;
-      container.setState({selfViewSrc: stream.toURL()});
+      container.setState({ selfViewSrc: stream.toURL() });
 
       for (const id in pcPeers) {
         const pc = pcPeers[id];
@@ -293,19 +292,19 @@ const Component2 = React.createClass({
   receiveTextData(data) {
     const textRoomData = this.state.textRoomData.slice();
     textRoomData.push(data);
-    this.setState({textRoomData, textRoomValue: ''});
+    this.setState({ textRoomData, textRoomValue: '' });
   },
   _textRoomPress() {
     if (!this.state.textRoomValue) {
       return
     }
     const textRoomData = this.state.textRoomData.slice();
-    textRoomData.push({user: 'Me', message: this.state.textRoomValue});
+    textRoomData.push({ user: 'Me', message: this.state.textRoomValue });
     for (const key in pcPeers) {
       const pc = pcPeers[key];
       pc.textDataChannel.send(this.state.textRoomValue);
     }
-    this.setState({textRoomData, textRoomValue: ''});
+    this.setState({ textRoomData, textRoomValue: '' });
   },
   _renderTextRoom() {
     return (
@@ -313,10 +312,10 @@ const Component2 = React.createClass({
         <ListView
           dataSource={this.ds.cloneWithRows(this.state.textRoomData)}
           renderRow={rowData => <Text>{`${rowData.user}: ${rowData.message}`}</Text>}
-          />
+        />
         <TextInput
-          style={{width: 200, height: 30, borderColor: 'gray', borderWidth: 1}}
-          onChangeText={value => this.setState({textRoomValue: value})}
+          style={{ width: 200, height: 30, borderColor: 'gray', borderWidth: 1 }}
+          onChangeText={value => this.setState({ textRoomValue: value })}
           value={this.state.textRoomValue}
         />
         <TouchableHighlight
@@ -333,7 +332,7 @@ const Component2 = React.createClass({
           {this.state.info}
         </Text>
 
-        { this.state.status == 'ready' ?
+        {this.state.status == 'ready' ?
           (<View>
             <TouchableHighlight
               onPress={this._press}>
@@ -342,8 +341,8 @@ const Component2 = React.createClass({
           </View>) : null
         }
         {
-          mapHash(this.state.remoteList, function(remote, index) {
-            return <RTCView key={index} streamURL={remote} style={styles.remoteView}/>
+          mapHash(this.state.remoteList, function (remote, index) {
+            return <RTCView key={index} streamURL={remote} style={styles.remoteView} />
           })
         }
       </View>
@@ -357,7 +356,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   remoteView: {
-    flex:2,
+    flex: 2,
     zIndex: -5,
   },
   container: {
@@ -375,7 +374,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Component2;
+export default Call;
 //
 //
 // AppRegistry.registerComponent('RCTWebRTCDemo', () => RCTWebRTCDemo);

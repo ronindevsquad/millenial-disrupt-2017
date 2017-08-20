@@ -2,21 +2,25 @@ import React, { Component } from 'react';
 import { AppRegistry, Text, View } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 
+import Analysis from './components/analysis.js';
+import Call from './components/call.js';
+import Home from './components/home.js';
 import HomeScreen from './components/homescreen.js';
-import Component2 from './components/component2.js';
 
 export default class Monicall extends Component {
   render() {
     return (
-      <MainNavigator/>
+      <MainNavigator />
     );
   }
 }
 
 const MainNavigator = StackNavigator(
   {
-    HomeScreen: { screen: HomeScreen },
-    Component2: { screen: Component2 },
+    Analysis: { screen: Analysis },
+    Call: { screen: Call },
+    Home: { screen: Home },
+    HomeScreen: { screen: HomeScreen }
   },
   {
     cardStyle: { backgroundColor: 'white' },
