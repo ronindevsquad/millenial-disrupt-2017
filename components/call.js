@@ -8,6 +8,10 @@ import {
   TextInput,
   ListView,
   Platform,
+  Image,
+  Dimensions,
+  Button,
+  StatusBar
 } from 'react-native';
 
 import io from 'socket.io-client';
@@ -68,8 +72,6 @@ function join(roomID) {
     // console.log('join', socketIds);
     for (const i in socketIds) {
       const socketId = socketIds[i];
-      console.log("*******************************************************");
-      console.log("socket id:", socketIds[i]);
       createPC(socketId, true);
     }
   });
@@ -121,7 +123,7 @@ function createPC(socketId, isOffer) {
   pc.onaddstream = function (event) {
     // console.log('onaddstream', event.stream);
     // console.log(container, "onaddstream");
-    container.setState({ info: 'One peer join!' });
+    container.setState({ info: '' });
 
     const remoteList = container.state.remoteList;
     remoteList[socketId] = event.stream.toURL();
@@ -200,7 +202,7 @@ function leave(socketId) {
   const remoteList = container.state.remoteList;
   delete remoteList[socketId]
   container.setState({ remoteList: remoteList });
-  container.setState({ info: 'One peer leave!' });
+  container.setState({ info: '' });
 }
 
 function logError(error) {
@@ -241,11 +243,11 @@ const Call = React.createClass({
       textRoomConnected: false,
       textRoomData: [],
       textRoomValue: '',
+      background:'#F5FCFF'
     };
   },
   componentDidMount() {
     // console.log("*****************************");
-    console.log("screenProps:", screenProps);
     container = this;
     this.socket = io.connect('https://react-native-webrtc.herokuapp.com', { transports: ['websocket'] });
     this.socket.on('exchange', function (data) {
@@ -265,32 +267,44 @@ const Call = React.createClass({
     });
   },
   _press(event) {
-    this.setState({ status: 'connect', info: 'Your conversation will start soon' });
+    this.setState({ status: 'connect', info: 'Your conversation will start soon', background:'black'});
     // // console.log(this.state);
     // // console.log(this.socket);
-    join("RoninDevSquad", this.socket);
+    join("RoninDevSquad2", this.socket);
   },
   render() {
+    const { navigate } = this.props.navigation;
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          {this.state.info}
-        </Text>
-
-        {this.state.status == 'ready' ?
-          (<View style={{alignItems:'center'}}>
-            <TouchableHighlight
-              onPress={this._press}>
-              <Text>Join call</Text>
-            </TouchableHighlight>
-          </View>) : null
-        }
-        {
-          mapHash(this.state.remoteList, function (remote, index) {
-            console.log(remote, index);
-            return <RTCView key={index} streamURL={remote} style={styles.remoteView} />
-          })
-        }
+        <StatusBar hidden backgroundColor={this.state.background}/>
+        <View style={{flex:1}}>
+          <View style={styles.container}>
+            {this.state.status == 'ready' ?
+              (<View style={{alignItems:'center'}}>
+                <Button
+                  onPress={this._press}
+                  title="Join call"
+                />
+              </View>) :
+              (<Text style={styles.welcome}>
+                {this.state.info}
+              </Text>)
+            }
+            {
+              mapHash(this.state.remoteList, function (remote, index) {
+                return <RTCView objectFit='cover' key={index} streamURL={remote} style={styles.remoteView} />
+              })
+            }
+          </View>
+        </View>
+        <TouchableHighlight
+            style={{position:'absolute', bottom:15, left:0, right:0, justifyContent:'center', alignItems:'center'}}
+            onPress={()=>{navigate('Analysis')}
+          }>
+          <Image
+            source={require('../assets/close.png')}
+            style={styles.exitButton}/>
+        </TouchableHighlight>
       </View>
     );
   }
@@ -302,7 +316,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   remoteView: {
-    flex: 2,
+    flex:2,
     zIndex: -5,
   },
   container: {
@@ -318,9 +332,17 @@ const styles = StyleSheet.create({
   listViewContainer: {
     height: 40,
   },
+  exitButton: {
+    height: 30,
+    width: 30,
+    zIndex: -10
+  },
 });
 
 export default Call;
+/*
+
+*/
 //
 //
 // AppRegistry.registerComponent('RCTWebRTCDemo', () => RCTWebRTCDemo);

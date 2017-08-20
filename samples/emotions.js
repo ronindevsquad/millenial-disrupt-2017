@@ -1,17 +1,18 @@
 export default {
   "Elliot":{
-    emoji:"Coffee",
+    monica:"scream",
     joy:0,
     sadness:0,
     disgust:0,
     contempt:0,
     anger:0,
-    fear:0,
-    surprise:0,
+    fear:100,
+    surprise:20,
     valence:0,
     engagement:0
   },
   "George":{
+    monica:"neutral_face",
     joy:0,
     sadness:0,
     disgust:0,
@@ -23,6 +24,7 @@ export default {
     engagement:0
   },
   "Harvey":{
+    monica:"neutral_face",
     joy:0,
     sadness:0,
     disgust:0,
@@ -34,6 +36,7 @@ export default {
     engagement:0
   },
   "Justin":{
+    monica:"neutral_face",
     joy:0,
     sadness:0,
     disgust:0,
@@ -45,6 +48,7 @@ export default {
     engagement:0
   },
   "Spock":{
+    monica:"neutral_face",
     joy:0,
     sadness:0,
     disgust:0,
