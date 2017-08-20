@@ -31,14 +31,14 @@ const configuration = { "iceServers": [{ "url": "stun:stun.l.google.com:19302" }
 const pcPeers = {};
 
 function getLocalStream(isFront, callback) {
-  // console.log("getLocalStream");
+  // // console.log("getLocalStream");
   let videoSourceId;
 
   // on android, you don't have to specify sourceId manually, just use facingMode
   // uncomment it if you want to specify
   if (Platform.OS === 'ios') {
     MediaStreamTrack.getSources(sourceInfos => {
-      // console.log("sourceInfos: ", sourceInfos);
+      // // console.log("sourceInfos: ", sourceInfos);
 
       for (const i = 0; i < sourceInfos.length; i++) {
         const sourceInfo = sourceInfos[i];
@@ -66,10 +66,10 @@ function getLocalStream(isFront, callback) {
 }
 
 function join(roomID) {
-  // console.log("*********************************");
-  //// console.log(container.socket);
+  // // console.log("*********************************");
+  //// // console.log(container.socket);
   container.socket.emit('join', roomID, function (socketIds) {
-    // console.log('join', socketIds);
+    // // console.log('join', socketIds);
     for (const i in socketIds) {
       const socketId = socketIds[i];
       createPC(socketId, true);
@@ -122,12 +122,12 @@ function createPC(socketId, isOffer) {
 
   pc.onaddstream = function (event) {
     // console.log('onaddstream', event.stream);
-    // console.log(container, "onaddstream");
+    // // console.log(container, "onaddstream");
     container.setState({ info: '' });
 
     const remoteList = container.state.remoteList;
     remoteList[socketId] = event.stream.toURL();
-    // console.log(container, "onaddstream2")
+    // // console.log(container, "onaddstream2")
     container.setState({ remoteList: remoteList });
   };
   pc.onremovestream = function (event) {
@@ -137,12 +137,13 @@ function createPC(socketId, isOffer) {
   pc.addStream(container.localstream);
   function createDataChannel() {
     if (pc.textDataChannel) {
+      // console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
       return;
     }
     const dataChannel = pc.createDataChannel("text");
 
     dataChannel.onerror = function (error) {
-      console.log("dataChannel.onerror", error);
+      // console.log("dataChannel.onerror", error);
     };
 
     dataChannel.onmessage = function (event) {
@@ -152,12 +153,11 @@ function createPC(socketId, isOffer) {
 
     dataChannel.onopen = function () {
       // console.log('dataChannel.onopen');
-      // console.log(container, "onopen")
       container.setState({ textRoomConnected: true });
     };
 
     dataChannel.onclose = function () {
-      console.log("dataChannel.onclose");
+      // console.log("dataChannel.onclose");
     };
 
     pc.textDataChannel = dataChannel;
@@ -175,25 +175,25 @@ function exchange(data) {
   }
 
   if (data.sdp) {
-    // console.log('exchange sdp', data);
+    // // console.log('exchange sdp', data);
     pc.setRemoteDescription(new RTCSessionDescription(data.sdp), function () {
       if (pc.remoteDescription.type == "offer")
         pc.createAnswer(function (desc) {
-          // console.log('createAnswer', desc);
+          // // console.log('createAnswer', desc);
           pc.setLocalDescription(desc, function () {
-            // console.log('setLocalDescription', pc.localDescription);
+            // // console.log('setLocalDescription', pc.localDescription);
             container.socket.emit('exchange', { 'to': fromId, 'sdp': pc.localDescription });
           }, logError);
         }, logError);
     }, logError);
   } else {
-    // console.log('exchange candidate', data);
+    // // console.log('exchange candidate', data);
     pc.addIceCandidate(new RTCIceCandidate(data.candidate));
   }
 }
 
 function leave(socketId) {
-  // console.log('leave', socketId);
+  // // console.log('leave', socketId);
   const pc = pcPeers[socketId];
   const viewIndex = pc.viewIndex;
   pc.close();
@@ -206,7 +206,7 @@ function leave(socketId) {
 }
 
 function logError(error) {
-  // console.log("logError", error);
+  // // console.log("logError", error);
 }
 
 function mapHash(hash, func) {
@@ -222,9 +222,9 @@ function getStats() {
   const pc = pcPeers[Object.keys(pcPeers)[0]];
   if (pc.getRemoteStreams()[0] && pc.getRemoteStreams()[0].getAudioTracks()[0]) {
     const track = pc.getRemoteStreams()[0].getAudioTracks()[0];
-    // console.log('track', track);
+    // // console.log('track', track);
     pc.getStats(track, function (report) {
-      // console.log('getStats report', report);
+      // // console.log('getStats report', report);
     }, logError);
   }
 }
@@ -246,30 +246,44 @@ const Call = React.createClass({
       background:'#F5FCFF'
     };
   },
+  receiveTextData(data) {
+    // console.log("******************************************");
+    // console.log(data);
+    screenProps.emotions = data;
+  },
   componentDidMount() {
-    // console.log("*****************************");
+    // // console.log("*****************************");
     container = this;
     this.socket = io.connect('https://react-native-webrtc.herokuapp.com', { transports: ['websocket'] });
+    // console.log("connect1");
+    this.textSocket = io.connect('https://anvyl.online', { transports: ['websocket'] });
+    screenProps.textSocket = this.textSocket;
+    // console.log("connect2");
+
     this.socket.on('exchange', function (data) {
       exchange(data);
     });
     this.socket.on('leave', function (socketId) {
       leave(socketId);
     });
-
     this.socket.on('connect', function (data) {
-      // console.log('connect');
+      // // console.log('connect');
       getLocalStream(true, function (stream) {
         container.localstream = stream;
         container.setState({ selfViewSrc: stream.toURL() });
         container.setState({ status: 'ready', info: 'Click here to join call' });
       });
     });
+
+    this.textSocket.on('faces', function (data) {
+      screenProps.emotions = data[0].emotions;
+      screenProps.emotions.monica = data[0].emojis.dominantEmoji;
+    });
   },
   _press(event) {
     this.setState({ status: 'connect', info: 'Your conversation will start soon', background:'black'});
-    // // console.log(this.state);
-    // // console.log(this.socket);
+    // // // console.log(this.state);
+    // // // console.log(this.socket);
     join("RoninDevSquad2", this.socket);
   },
   render() {

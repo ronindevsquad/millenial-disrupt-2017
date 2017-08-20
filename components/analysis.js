@@ -10,13 +10,37 @@ export default class Analysis extends Component {
 		super(props);
 
 		this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
+		console.log(this.screenProps);
 		this.state = {
 			name: screenProps.name,
-			dataSource: this.ds.cloneWithRows(Object.keys(emotions[screenProps.name]))
+			dataSource: this.ds.cloneWithRows(Object.keys(emotions[screenProps.name])),
+			emotions: emotions[screenProps.name]
 		};
+		if(screenProps.emotions) {
+			for(let i=0; i < 20; i++) {
+				console.log("****GOT EMOTION DATA****");
+			}
+			this.setState({emotions:screenProps.emotions});
+		}
+		else {
+			for(let i=0; i < 20; i++) {
+				console.log("****NO EMOTION DATA****");
+			}
+			this.setState({emotions:emotions[screenProps.name]});
+		}
 	}
 	componentDidMount() {
 		console.log(screenProps);
+		const component = this;
+		screenProps.textSocket.on('faces', function(data){
+			if(data[0]) {
+				console.log("UPDATE\NUPDATE\NUPDATE\NUPDATE\NUPDATE\NUPDATE\NUPDATE\NUPDATE\NUPDATE\NUPDATE\N");
+				let newEmotions = data[0].emotions;
+	      newEmotions.monica = data[0].emojis.dominantEmoji;
+				console.log(newEmotions);
+				component.setState({emotions:newEmotions, dataSource:component.ds.cloneWithRows(Object.keys(newEmotions))});
+			}
+		});
 	}
 	render() {
 		return (
@@ -30,9 +54,9 @@ export default class Analysis extends Component {
 					renderRow={(rowData, sectionID, rowID) => (
 						<View style={{flexDirection:'row'}}>
 							<Text style={{flex:0.5, fontSize:16}}>{rowData[0].toUpperCase()+rowData.slice(1)}</Text>
-							<Text style={{flex:0.5, fontSize:16}}>: {!isNaN(emotions[screenProps.name][rowData]) ?
-								 emotions[screenProps.name][rowData] :
-								 (<Emoji name={emotions[screenProps.name][rowData]}/>)
+							<Text style={{flex:0.5, fontSize:16}}>: {!isNaN(this.state.emotions[rowData]) ?
+								 this.state.emotions[rowData].toFixed(2) :
+								 this.state.emotions[rowData]
 								 }</Text>
 					 </View>
 					)}>
