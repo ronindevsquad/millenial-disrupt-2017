@@ -24,8 +24,8 @@ const MainNavigator = StackNavigator(
   },
   {
     cardStyle: { backgroundColor: 'white' },
-    // headerMode: 'none',
-    initialRouteName: 'HomeScreen'
+    headerMode: 'none',
+    initialRouteName: 'Home'
   }
 );
 
