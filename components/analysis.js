@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { Text, View, Image, ListView } from 'react-native';
+import { Text, View, Image, ListView, StyleSheet } from 'react-native';
+import Emoji from 'react-native-emoji';
 
-import users from '../samples/users';
+import emotions from '../samples/emotions';
 // Replace with hardcoded psy data
 
 export default class Analysis extends Component {
@@ -9,9 +10,10 @@ export default class Analysis extends Component {
 		super(props);
 
 		this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
+		console.log("emotions:",Object.keys(emotions));
 		this.state = {
 			name: screenProps.name,
-			dataSource: this.ds.cloneWithRows(users)
+			dataSource: this.ds.cloneWithRows(Object.keys(emotions[screenProps.name]))
 		};
 	}
 	componentDidMount() {
@@ -20,14 +22,19 @@ export default class Analysis extends Component {
 	render() {
 		return (
 			<View style={{flex:1}}>
-				<View style={{ flex: 0.05, flexDirection:'row', padding:25}}>
-					<Text style={{flex: 0.5, fontSize:20, paddingVertical:10}}>Monicall</Text>
-					<Image source={require('../assets/icon.png')} style={{width:50,height:50}}/>
+				<View style={{flex:0.15, padding:25, justifyContent:'flex-end'}}>
+					<Text style={{fontSize:20}}>{this.state.name}</Text>
 				</View>
-				<View>
-					<Text>{this.state.name}</Text>
-				</View>
+				<ListView dataSource={this.state.dataSource}
+					removeClippedSubviews={false}
+					renderRow={(rowData, sectionID, rowID) => (
+						<Text>{rowData}: {emotions[screenProps.name][rowData]}</Text>
+					)}>
+				</ListView>
 			</View>
 		);
 	}
+}
+
+const styles = {
 }

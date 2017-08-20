@@ -22,7 +22,7 @@ export default class Home extends Component {
 		const { navigate } = this.props.navigation;
 		return (
 			<View style={{flex:1}}>
-				<View style={{ flex: 0.05, flexDirection:'row', padding:25}}>
+				<View style={{ flex: 0.1, flexDirection:'row', padding:25}}>
 					<Text style={{flex: 0.5, fontSize:20, paddingVertical:10}}>Monicall</Text>
 					<Image source={require('../assets/icon.png')} style={{width:50,height:50}}/>
 				</View>

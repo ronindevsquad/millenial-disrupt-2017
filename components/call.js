@@ -265,7 +265,7 @@ const Call = React.createClass({
     });
   },
   _press(event) {
-    this.setState({ status: 'connect', info: 'Connecting' });
+    this.setState({ status: 'connect', info: 'Your conversation will start soon' });
     // // console.log(this.state);
     // // console.log(this.socket);
     join("RoninDevSquad", this.socket);
